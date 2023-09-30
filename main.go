@@ -62,6 +62,7 @@ func decideWinner(parentRoll, childRoll []int) string {
 		if pDiceN >= cDiceN {
 			return "parent"
 		}
+		return "child"
 	}
 
 	if parentPayout >= childPayout {
@@ -76,7 +77,7 @@ func decideWinner(parentRoll, childRoll []int) string {
 
 func playGame() (float64, float64) {
 	dMoeny := 100
-	dLoopN := 1000
+	dLoopN := 100000
 	parentMoney := dMoeny
 	childMoney := dMoeny
 
@@ -84,8 +85,8 @@ func playGame() (float64, float64) {
 		pDices := []int{}
 		for j := 0; j < 3; j++ {
 			pDices = rollDice()
-			//pDices = []int{2,2,3}
-			//pDices = []int{1,2,3}
+			//pDices = []int{2,3,3}
+			//pDices = []int{3,3,3}
 			pR, _ := diceType(pDices)
 			fmt.Print("pR: ")
 			fmt.Println(pR)
@@ -98,7 +99,7 @@ func playGame() (float64, float64) {
 		cDices := []int{}
 		for j := 0; j < 3; j++ {
 			cDices = rollDice()
-			//cDices = []int{1,2,3}
+			//cDices = []int{2,2,3}
 			//cDices = []int{4,2,3}
 			cR, _ := diceType(cDices)
 			fmt.Print("cR: ")
@@ -114,7 +115,7 @@ func playGame() (float64, float64) {
 		pPayout, _ := diceType(pDices)
 		cPayout, _ := diceType(cDices)
 	
-		payout := selectPayout(winner,pPayout,cPayout)
+		payout := payoutMultiplier(winner,pPayout,cPayout)
 
 		fmt.Println(payout)
 		if winner == "parent" {
@@ -133,21 +134,40 @@ func playGame() (float64, float64) {
 	return pR , cR
 }
 
-//TODO 倍付け
-func selectPayout(winner string, pPayout int, cPayout int) int {
+
+func payoutMultiplier(winner string, pPayout int, cPayout int) int {
+	if pPayout == 0 {
+		pPayout = 1
+	}
+	if cPayout == 0 {
+		cPayout = 1
+	}
 	if winner == "parent" {
 		if pPayout == HIFUMI {
-			return HIFUMI
+			baizuke := 1
+			if cPayout == ARASHI || cPayout == SHIGORO || cPayout == PIN_ZORO {
+				baizuke = cPayout
+			}
+
+			return HIFUMI * baizuke
 		}
 
 		if cPayout ==  HIFUMI {
-			return -HIFUMI
+			baizuke := 1
+			if pPayout == ARASHI || pPayout == SHIGORO || pPayout == PIN_ZORO {
+				baizuke = pPayout
+			}
+			return -HIFUMI * baizuke
 		}
 		return pPayout
 	}
 
 	if pPayout == HIFUMI {
-		return -HIFUMI
+		baizuke := 1
+		if cPayout == ARASHI || cPayout == SHIGORO || cPayout == PIN_ZORO {
+			baizuke = cPayout
+		}
+		return -HIFUMI * baizuke
 	}
 	return cPayout
 }
