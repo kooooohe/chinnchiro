@@ -5,7 +5,11 @@ import (
 	"math/rand"
 	"sort"
 	"time"
+	"log/slog"
+	"os"
 )
+
+
 
 const HIFUMI = -2
 const ME_NASHI = 0
@@ -76,8 +80,8 @@ func decideWinner(parentRoll, childRoll []int) string {
 }
 
 func playGame() (float64, float64) {
-	dMoeny := 100
-	dLoopN := 100000
+	dMoeny := 1
+	dLoopN := 10000
 	parentMoney := dMoeny
 	childMoney := dMoeny
 
@@ -88,13 +92,19 @@ func playGame() (float64, float64) {
 			//pDices = []int{2,3,3}
 			//pDices = []int{3,3,3}
 			pR, _ := diceType(pDices)
+			// slog.Info("pR: ")
+			// slog.Info("%v", pR)
+			// slog.Info("%v", pDices)
 			fmt.Print("pR: ")
 			fmt.Println(pR)
 			fmt.Println(pDices)
+
 			if pR != ME_NASHI {
 				break
 			}
 		}
+		fmt.Print("final parent dice: ")
+		fmt.Println(pDices)
 
 		cDices := []int{}
 		for j := 0; j < 3; j++ {
@@ -109,6 +119,8 @@ func playGame() (float64, float64) {
 				break
 			}
 		}
+		fmt.Print("final child dice: ")
+		fmt.Println(cDices)
 
 		winner := decideWinner(pDices, cDices)
 
@@ -117,6 +129,7 @@ func playGame() (float64, float64) {
 	
 		payout := payoutMultiplier(winner,pPayout,cPayout)
 
+		fmt.Print("bairitsu: ")
 		fmt.Println(payout)
 		if winner == "parent" {
 			fmt.Println("winner: parent")
@@ -127,9 +140,13 @@ func playGame() (float64, float64) {
 			childMoney += dMoeny * payout
 			parentMoney -= dMoeny * payout
 		}
+		fmt.Println("")
 	}
 	pR := float64(parentMoney) / float64(dMoeny * dLoopN)
 	cR := float64(childMoney)  / float64(dMoeny * dLoopN)
+
+	//pR := float64(parentMoney)
+	//cR := float64(childMoney)
 
 	return pR , cR
 }
@@ -173,6 +190,11 @@ func payoutMultiplier(winner string, pPayout int, cPayout int) int {
 }
 
 func main() {
+	l := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
+
+	slog.SetDefault(l) 
 	rand.NewSource(time.Now().UnixNano())
 	parentMoney, childMoney := playGame()
 	fmt.Printf("Parent Money: %f\n", parentMoney)
