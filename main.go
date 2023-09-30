@@ -7,49 +7,56 @@ import (
 	"time"
 )
 
+const HIFUMI = -2
+const ME_NASHI = 0
+const ME_NOMAL = 1
+const SHIGORO = 2
+const ARASHI = 3
+const PIN_ZORO = 5
+
 func rollDice() []int {
 	dice := []int{rand.Intn(6) + 1, rand.Intn(6) + 1, rand.Intn(6) + 1}
 	sort.Ints(dice)
 	return dice
 }
 
-func getPayout(roll []int) (int, int) {
+func diceType(roll []int) (int, int) {
 	// fmt.Println(roll)
 	// 111
 	if roll[0] == 1 && roll[1] == 1 && roll[2] == 1 {
-		return 5, 0
+		return PIN_ZORO, 0
 	}
 	// 456
 	if roll[0] == 4 && roll[1] == 5 && roll[2] == 6 {
-		return 2, 0
+		return SHIGORO, 0
 	}
 	// 222,333,444,555,666
 	if roll[0] == roll[1] && roll[1] == roll[2] {
-		return 3, 0
+		return ARASHI, 0
 	}
 
 	// 123
 	if roll[0] == 1 && roll[1] == 2 && roll[2] == 3 {
-		return -2, 0
+		return HIFUMI, 0
 	}
 
 	// 112,221,...
 	if roll[0] == roll[1] {
-		return 1, roll[2]
+		return ME_NOMAL, roll[2]
 	}
 	if roll[1] == roll[2] {
-		return 1, roll[0]
+		return ME_NOMAL, roll[0]
 	}
 	if roll[0] == roll[2] {
-		return 1, roll[1]
+		return ME_NOMAL, roll[1]
 	}
 	// 134,...
-	return 0, 0
+	return ME_NASHI, 0
 }
 
 func decideWinner(parentRoll, childRoll []int) string {
-	parentPayout, pDiceN := getPayout(parentRoll)
-	childPayout, cDiceN := getPayout(childRoll)
+	parentPayout, pDiceN := diceType(parentRoll)
+	childPayout, cDiceN := diceType(childRoll)
 
 	if parentPayout == 1 && childPayout == 1 {
 		if pDiceN >= cDiceN {
@@ -69,7 +76,7 @@ func decideWinner(parentRoll, childRoll []int) string {
 
 func playGame() (float64, float64) {
 	dMoeny := 100
-	dLoopN := 1
+	dLoopN := 1000
 	parentMoney := dMoeny
 	childMoney := dMoeny
 
@@ -79,11 +86,11 @@ func playGame() (float64, float64) {
 			pDices = rollDice()
 			//pDices = []int{2,2,3}
 			//pDices = []int{1,2,3}
-			pR, _ := getPayout(pDices)
+			pR, _ := diceType(pDices)
 			fmt.Print("pR: ")
 			fmt.Println(pR)
 			fmt.Println(pDices)
-			if pR != 0 {
+			if pR != ME_NASHI {
 				break
 			}
 		}
@@ -93,19 +100,19 @@ func playGame() (float64, float64) {
 			cDices = rollDice()
 			//cDices = []int{1,2,3}
 			//cDices = []int{4,2,3}
-			cR, _ := getPayout(cDices)
+			cR, _ := diceType(cDices)
 			fmt.Print("cR: ")
 			fmt.Println(cR)
 			fmt.Println(cDices)
-			if cR != 0 {
+			if cR != ME_NASHI {
 				break
 			}
 		}
 
 		winner := decideWinner(pDices, cDices)
 
-		pPayout, _ := getPayout(pDices)
-		cPayout, _ := getPayout(cDices)
+		pPayout, _ := diceType(pDices)
+		cPayout, _ := diceType(cDices)
 	
 		payout := selectPayout(winner,pPayout,cPayout)
 
@@ -129,18 +136,18 @@ func playGame() (float64, float64) {
 //TODO 倍付け
 func selectPayout(winner string, pPayout int, cPayout int) int {
 	if winner == "parent" {
-		if pPayout == -2 {
-			return -2
+		if pPayout == HIFUMI {
+			return HIFUMI
 		}
 
-		if cPayout == -2 {
-			return 2
+		if cPayout ==  HIFUMI {
+			return -HIFUMI
 		}
 		return pPayout
 	}
 
-	if pPayout == -2 {
-		return 2
+	if pPayout == HIFUMI {
+		return -HIFUMI
 	}
 	return cPayout
 }
