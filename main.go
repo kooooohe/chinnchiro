@@ -64,18 +64,12 @@ func decideWinner(parentRoll, childRoll []int) string {
 		return "child"
 	}
 
-	if parentPayout == 2 && parentRoll[0] == childRoll[0] {
-		if parentRoll[2] > childRoll[2] {
-			return "parent"
-		}
-		return "child"
-	}
 	return "parent"
 }
 
 func playGame() (float64, float64) {
 	dMoeny := 100
-	dLoopN := 10000
+	dLoopN := 1
 	parentMoney := dMoeny
 	childMoney := dMoeny
 
@@ -83,7 +77,12 @@ func playGame() (float64, float64) {
 		pDices := []int{}
 		for j := 0; j < 3; j++ {
 			pDices = rollDice()
+			//pDices = []int{2,2,3}
+			//pDices = []int{1,2,3}
 			pR, _ := getPayout(pDices)
+			fmt.Print("pR: ")
+			fmt.Println(pR)
+			fmt.Println(pDices)
 			if pR != 0 {
 				break
 			}
@@ -92,21 +91,31 @@ func playGame() (float64, float64) {
 		cDices := []int{}
 		for j := 0; j < 3; j++ {
 			cDices = rollDice()
+			//cDices = []int{1,2,3}
+			//cDices = []int{4,2,3}
 			cR, _ := getPayout(cDices)
+			fmt.Print("cR: ")
+			fmt.Println(cR)
+			fmt.Println(cDices)
 			if cR != 0 {
 				break
 			}
 		}
 
 		winner := decideWinner(pDices, cDices)
-		payout, _ := getPayout(pDices)
-		if payout == 0 {
-			payout = 1
-		}
+
+		pPayout, _ := getPayout(pDices)
+		cPayout, _ := getPayout(cDices)
+	
+		payout := selectPayout(winner,pPayout,cPayout)
+
+		fmt.Println(payout)
 		if winner == "parent" {
+			fmt.Println("winner: parent")
 			parentMoney += dMoeny * payout
 			childMoney -= dMoeny * payout
 		} else {
+			fmt.Println("winner: child")
 			childMoney += dMoeny * payout
 			parentMoney -= dMoeny * payout
 		}
@@ -115,6 +124,25 @@ func playGame() (float64, float64) {
 	cR := float64(childMoney)  / float64(dMoeny * dLoopN)
 
 	return pR , cR
+}
+
+//TODO 倍付け
+func selectPayout(winner string, pPayout int, cPayout int) int {
+	if winner == "parent" {
+		if pPayout == -2 {
+			return -2
+		}
+
+		if cPayout == -2 {
+			return 2
+		}
+		return pPayout
+	}
+
+	if pPayout == -2 {
+		return 2
+	}
+	return cPayout
 }
 
 func main() {
