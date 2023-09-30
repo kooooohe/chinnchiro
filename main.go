@@ -173,7 +173,7 @@ func payoutMultiplier(winner string, pPayout int, cPayout int) int {
 }
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
+	rand.NewSource(time.Now().UnixNano())
 	parentMoney, childMoney := playGame()
 	fmt.Printf("Parent Money: %f\n", parentMoney)
 	fmt.Printf("Child Money: %f\n", childMoney)
