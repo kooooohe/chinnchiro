@@ -81,15 +81,15 @@ func decideWinner(parentRoll, childRoll []int) string {
 
 func playGame() (float64, float64) {
 	dMoeny := 1
-	dLoopN := 10000
-	parentMoney := dMoeny
-	childMoney := dMoeny
+	dLoopN := 1000000
+	parentMoney := 0
+	childMoney := 0
 
 	for i := 0; i < dLoopN; i++ {
 		pDices := []int{}
 		for j := 0; j < 3; j++ {
 			pDices = rollDice()
-			//pDices = []int{2,3,3}
+			//pDices = []int{1,2,3}
 			//pDices = []int{3,3,3}
 			pR, _ := diceType(pDices)
 			// slog.Info("pR: ")
@@ -110,7 +110,7 @@ func playGame() (float64, float64) {
 		for j := 0; j < 3; j++ {
 			cDices = rollDice()
 			//cDices = []int{2,2,3}
-			//cDices = []int{4,2,3}
+			//cDices = []int{1,2,3}
 			cR, _ := diceType(cDices)
 			fmt.Print("cR: ")
 			fmt.Println(cR)
