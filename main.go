@@ -75,9 +75,13 @@ type Player struct {
 }
 
 func (p *Player) Roll() {
-	for i := 0; i < 3; i++ {
+	for range(3) {
 		d := Dices{}
 		d.roll()
+		if d.Yaku() != ME_NASHI {
+			p.Yaku = d.Yaku()
+			return
+		}
 	}
 	p.Yaku = ME_NASHI
 }
