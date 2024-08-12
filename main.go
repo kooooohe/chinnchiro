@@ -72,6 +72,7 @@ func (d *Dices) Yaku() Yaku{
 
 type Player struct {
 	Yaku
+	Me int
 }
 
 func (p *Player) Roll() {
@@ -80,11 +81,53 @@ func (p *Player) Roll() {
 		d.roll()
 		if d.Yaku() != ME_NASHI {
 			p.Yaku = d.Yaku()
+			if p.Yaku == ME {
+				p.Me = d.Dices[2].value
+			}
 			return
 		}
 	}
 	p.Yaku = ME_NASHI
 }
+
+type Parent struct {
+	Yaku
+	Me int
+}
+
+func (p *Parent) Roll() {
+	for range(3) {
+		d := Dices{}
+		d.roll()
+		if d.Yaku() != ME_NASHI {
+			p.Yaku = d.Yaku()
+			if p.Yaku == ME {
+				p.Me = d.Dices[2].value
+			}
+			return
+		}
+	}
+	p.Yaku = ME_NASHI
+}
+
+type Game struct {
+	Bet int
+	Player
+	Parent
+}
+
+func (g *Game) Start(ko Player, pa Parent, n int) {
+	g.Player = ko
+	g.Parent = pa
+	g.Player.Roll()
+	g.Parent.Roll()
+}
+
+func (g Game) Judge() {
+
+}
+
+
 
 
 func main() {
