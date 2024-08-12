@@ -9,11 +9,11 @@ import (
 type Yaku int
 
 const (
-	HIFUMI Yaku = 1
+	HIFUMI   Yaku = 1
 	ME_NASHI Yaku = 2
-	ME Yaku = 3
-	SHIGORO Yaku = 4
-	ARASHI Yaku = 5
+	ME       Yaku = 3
+	SHIGORO  Yaku = 4
+	ARASHI   Yaku = 5
 	PIN_ZORO Yaku = 6
 )
 
@@ -21,7 +21,7 @@ type Dice struct {
 	value int
 }
 
-func (d *Dice) roll()  {
+func (d *Dice) roll() {
 	d.value = rand.Intn(6) + 1
 }
 
@@ -46,7 +46,7 @@ func (d *Dices) sort() {
 	}
 }
 
-func (d *Dices) Yaku() Yaku{
+func (d *Dices) Yaku() Yaku {
 	first := d.Dices[0].value
 	second := d.Dices[1].value
 	third := d.Dices[2].value
@@ -63,27 +63,32 @@ func (d *Dices) Yaku() Yaku{
 	if first == 1 && second == 2 && third == 3 {
 		return HIFUMI
 	}
-	if first == second || second == third  || first == third { 
+	if first == second || second == third || first == third {
 		return ME
 	}
 	return ME_NASHI
 }
 
-
 type Player struct {
 	Yaku
 	Me int
+	Dices
 }
 
 func (p *Player) Roll() {
-	for range(3) {
+	for range 3 {
 		d := Dices{}
 		d.roll()
 		if d.Yaku() != ME_NASHI {
 			p.Yaku = d.Yaku()
 			if p.Yaku == ME {
-				p.Me = d.Dices[2].value
+				if d.Dices[0].value == d.Dices[1].value {
+					p.Me = d.Dices[2].value
+				} else {
+					p.Me = d.Dices[0].value
+				}
 			}
+			p.Dices = d
 			return
 		}
 	}
@@ -93,17 +98,23 @@ func (p *Player) Roll() {
 type Parent struct {
 	Yaku
 	Me int
+	Dices
 }
 
 func (p *Parent) Roll() {
-	for range(3) {
+	for range 1000000 {
 		d := Dices{}
 		d.roll()
 		if d.Yaku() != ME_NASHI {
 			p.Yaku = d.Yaku()
 			if p.Yaku == ME {
-				p.Me = d.Dices[2].value
+				if d.Dices[0].value == d.Dices[1].value {
+					p.Me = d.Dices[2].value
+				} else {
+					p.Me = d.Dices[0].value
+				}
 			}
+			p.Dices = d
 			return
 		}
 	}
@@ -117,11 +128,43 @@ type Game struct {
 }
 
 func (g *Game) Start(n int) {
-	g.Player = Player{}
-	g.Parent = Parent{}
-	g.Player.Roll()
-	g.Parent.Roll()
-	fmt.Println(g.Judge())
+	m := map[Yaku]string{
+		1: "HIFUMI",
+		2: "ME_NASHI",
+		3: "ME",
+		4: "SHIGORO",
+		5: "ARASHI",
+		6: "PIN_ZORO",
+	}
+	_ = m
+
+	pc := 0
+	cc := 0
+	for range n {
+		g.Player = Player{}
+		g.Parent = Parent{}
+		g.Player.Roll()
+		g.Parent.Roll()
+		isPwin, r := g.Judge()
+		/*
+		fmt.Println("parent:", g.Parent)
+		fmt.Println(m[g.Parent.Yaku])
+		fmt.Println("children:", g.Player)
+		fmt.Println(m[g.Player.Yaku])
+		fmt.Println(g.Judge())
+		fmt.Println()
+		*/
+		if isPwin {
+			pc += r
+			//fmt.Println("parent:", r)
+		} else {
+			cc += r
+			//fmt.Println("children:", r)
+		}
+	}
+	fmt.Println("parent:", pc)
+	fmt.Println("player:", cc)
+	fmt.Println("P:", float64(pc)/float64(cc))
 }
 
 func (g Game) Judge() (isParentWin bool, baizuke int) {
@@ -151,10 +194,8 @@ func (g Game) isParentWin() bool {
 	return g.Parent.Yaku >= g.Player.Yaku
 }
 
-
 func main() {
 	rand.NewSource(time.Now().UnixNano())
 	g := Game{}
-	g.Start(1)
+	g.Start(10000000)
 }
-
