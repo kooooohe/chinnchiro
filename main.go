@@ -9,12 +9,12 @@ import (
 type Yaku int
 
 const (
-	HIFUMI Yaku = iota
-	ME_NASHI
-	ME
-	SHIGORO
-	ARASHI
-	PIN_ZORO
+	HIFUMI Yaku = 1
+	ME_NASHI Yaku = 2
+	ME Yaku = 3
+	SHIGORO Yaku = 4
+	ARASHI Yaku = 5
+	PIN_ZORO Yaku = 6
 )
 
 type Dice struct {
@@ -116,22 +116,45 @@ type Game struct {
 	Parent
 }
 
-func (g *Game) Start(ko Player, pa Parent, n int) {
-	g.Player = ko
-	g.Parent = pa
+func (g *Game) Start(n int) {
+	g.Player = Player{}
+	g.Parent = Parent{}
 	g.Player.Roll()
 	g.Parent.Roll()
+	fmt.Println(g.Judge())
 }
 
-func (g Game) Judge() {
+func (g Game) Judge() (isParentWin bool, baizuke int) {
+	baizuke = 1
+	if g.isParentWin() {
+	} else {
+		if g.Parent.Yaku == HIFUMI {
+			baizuke *= 2
+		}
+		if g.Player.Yaku == PIN_ZORO {
+			baizuke *= 3
+		}
+		if g.Player.Yaku == ARASHI {
+			baizuke *= 2
+		}
+		if g.Player.Yaku == SHIGORO {
+			baizuke *= 2
+		}
+	}
 
+	return g.isParentWin(), baizuke
 }
-
-
+func (g Game) isParentWin() bool {
+	if g.Parent.Yaku == ME && g.Player.Yaku == ME {
+		return g.Parent.Me >= g.Player.Me
+	}
+	return g.Parent.Yaku >= g.Player.Yaku
+}
 
 
 func main() {
-	fmt.Println("Hello, World!")
 	rand.NewSource(time.Now().UnixNano())
+	g := Game{}
+	g.Start(1)
 }
 
