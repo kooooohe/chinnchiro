@@ -147,12 +147,12 @@ func (g *Game) Start(n int) {
 		g.Parent.Roll()
 		isPwin, r := g.Judge()
 		/*
-		fmt.Println("parent:", g.Parent)
-		fmt.Println(m[g.Parent.Yaku])
-		fmt.Println("children:", g.Player)
-		fmt.Println(m[g.Player.Yaku])
-		fmt.Println(g.Judge())
-		fmt.Println()
+			fmt.Println("parent:", g.Parent)
+			fmt.Println(m[g.Parent.Yaku])
+			fmt.Println("children:", g.Player)
+			fmt.Println(m[g.Player.Yaku])
+			fmt.Println(g.Judge())
+			fmt.Println()
 		*/
 		if isPwin {
 			pc += r
@@ -197,5 +197,5 @@ func (g Game) isParentWin() bool {
 func main() {
 	rand.NewSource(time.Now().UnixNano())
 	g := Game{}
-	g.Start(10000000)
+	g.Start(10_000_000)
 }
