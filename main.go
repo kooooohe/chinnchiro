@@ -3,200 +3,199 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"sort"
 	"time"
-	"log/slog"
-	"os"
 )
 
+type Yaku int
 
+const (
+	HIFUMI   Yaku = 1
+	ME_NASHI Yaku = 2
+	ME       Yaku = 3
+	SHIGORO  Yaku = 4
+	ARASHI   Yaku = 5
+	PIN_ZORO Yaku = 6
+)
 
-const HIFUMI = -2
-const ME_NASHI = 0
-const ME_NOMAL = 1
-const SHIGORO = 2
-const ARASHI = 3
-const PIN_ZORO = 5
-
-func rollDice() []int {
-	dice := []int{rand.Intn(6) + 1, rand.Intn(6) + 1, rand.Intn(6) + 1}
-	sort.Ints(dice)
-	return dice
+type Dice struct {
+	value int
 }
 
-func diceType(roll []int) (int, int) {
-	// fmt.Println(roll)
-	// 111
-	if roll[0] == 1 && roll[1] == 1 && roll[2] == 1 {
-		return PIN_ZORO, 0
-	}
-	// 456
-	if roll[0] == 4 && roll[1] == 5 && roll[2] == 6 {
-		return SHIGORO, 0
-	}
-	// 222,333,444,555,666
-	if roll[0] == roll[1] && roll[1] == roll[2] {
-		return ARASHI, 0
-	}
-
-	// 123
-	if roll[0] == 1 && roll[1] == 2 && roll[2] == 3 {
-		return HIFUMI, 0
-	}
-
-	// 112,221,...
-	if roll[0] == roll[1] {
-		return ME_NOMAL, roll[2]
-	}
-	if roll[1] == roll[2] {
-		return ME_NOMAL, roll[0]
-	}
-	if roll[0] == roll[2] {
-		return ME_NOMAL, roll[1]
-	}
-	// 134,...
-	return ME_NASHI, 0
+func (d *Dice) roll() {
+	d.value = rand.Intn(6) + 1
 }
 
-func decideWinner(parentRoll, childRoll []int) string {
-	parentPayout, pDiceN := diceType(parentRoll)
-	childPayout, cDiceN := diceType(childRoll)
-
-	if parentPayout == 1 && childPayout == 1 {
-		if pDiceN >= cDiceN {
-			return "parent"
-		}
-		return "child"
-	}
-
-	if parentPayout >= childPayout {
-		return "parent"
-	}
-	if parentPayout < childPayout {
-		return "child"
-	}
-
-	return "parent"
+type Dices struct {
+	Dices [3]Dice
 }
 
-func playGame() (float64, float64) {
-	dMoeny := 1
-	dLoopN := 10000
-	parentMoney := dMoeny
-	childMoney := dMoeny
+func (d *Dices) roll() {
+	for i := 0; i < 3; i++ {
+		d.Dices[i].roll()
+	}
+	d.sort()
+}
 
-	for i := 0; i < dLoopN; i++ {
-		pDices := []int{}
-		for j := 0; j < 3; j++ {
-			pDices = rollDice()
-			//pDices = []int{2,3,3}
-			//pDices = []int{3,3,3}
-			pR, _ := diceType(pDices)
-			// slog.Info("pR: ")
-			// slog.Info("%v", pR)
-			// slog.Info("%v", pDices)
-			fmt.Print("pR: ")
-			fmt.Println(pR)
-			fmt.Println(pDices)
-
-			if pR != ME_NASHI {
-				break
+func (d *Dices) sort() {
+	for i := 0; i < 3; i++ {
+		for j := i; j < 3; j++ {
+			if d.Dices[i].value > d.Dices[j].value {
+				d.Dices[i], d.Dices[j] = d.Dices[j], d.Dices[i]
 			}
 		}
-		fmt.Print("final parent dice: ")
-		fmt.Println(pDices)
+	}
+}
 
-		cDices := []int{}
-		for j := 0; j < 3; j++ {
-			cDices = rollDice()
-			//cDices = []int{2,2,3}
-			//cDices = []int{4,2,3}
-			cR, _ := diceType(cDices)
-			fmt.Print("cR: ")
-			fmt.Println(cR)
-			fmt.Println(cDices)
-			if cR != ME_NASHI {
-				break
+func (d *Dices) Yaku() Yaku {
+	first := d.Dices[0].value
+	second := d.Dices[1].value
+	third := d.Dices[2].value
+
+	if first == 1 && second == 1 && third == 1 {
+		return PIN_ZORO
+	}
+	if first == second && second == third {
+		return ARASHI
+	}
+	if first == 4 && second == 5 && third == 6 {
+		return SHIGORO
+	}
+	if first == 1 && second == 2 && third == 3 {
+		return HIFUMI
+	}
+	if first == second || second == third || first == third {
+		return ME
+	}
+	return ME_NASHI
+}
+
+type Player struct {
+	Yaku
+	Me int
+	Dices
+}
+
+func (p *Player) Roll() {
+	for range 3 {
+		d := Dices{}
+		d.roll()
+		if d.Yaku() != ME_NASHI {
+			p.Yaku = d.Yaku()
+			if p.Yaku == ME {
+				if d.Dices[0].value == d.Dices[1].value {
+					p.Me = d.Dices[2].value
+				} else {
+					p.Me = d.Dices[0].value
+				}
 			}
+			p.Dices = d
+			return
 		}
-		fmt.Print("final child dice: ")
-		fmt.Println(cDices)
+	}
+	p.Yaku = ME_NASHI
+}
 
-		winner := decideWinner(pDices, cDices)
+type Parent struct {
+	Yaku
+	Me int
+	Dices
+}
 
-		pPayout, _ := diceType(pDices)
-		cPayout, _ := diceType(cDices)
-	
-		payout := payoutMultiplier(winner,pPayout,cPayout)
+func (p *Parent) Roll() {
+	for range 1000000 {
+		d := Dices{}
+		d.roll()
+		if d.Yaku() != ME_NASHI {
+			p.Yaku = d.Yaku()
+			if p.Yaku == ME {
+				if d.Dices[0].value == d.Dices[1].value {
+					p.Me = d.Dices[2].value
+				} else {
+					p.Me = d.Dices[0].value
+				}
+			}
+			p.Dices = d
+			return
+		}
+	}
+	p.Yaku = ME_NASHI
+}
 
-		fmt.Print("bairitsu: ")
-		fmt.Println(payout)
-		if winner == "parent" {
-			fmt.Println("winner: parent")
-			parentMoney += dMoeny * payout
-			childMoney -= dMoeny * payout
+type Game struct {
+	Bet int
+	Player
+	Parent
+}
+
+func (g *Game) Start(n int) {
+	m := map[Yaku]string{
+		1: "HIFUMI",
+		2: "ME_NASHI",
+		3: "ME",
+		4: "SHIGORO",
+		5: "ARASHI",
+		6: "PIN_ZORO",
+	}
+	_ = m
+
+	pc := 0
+	cc := 0
+	for range n {
+		g.Player = Player{}
+		g.Parent = Parent{}
+		g.Player.Roll()
+		g.Parent.Roll()
+		isPwin, r := g.Judge()
+		/*
+		fmt.Println("parent:", g.Parent)
+		fmt.Println(m[g.Parent.Yaku])
+		fmt.Println("children:", g.Player)
+		fmt.Println(m[g.Player.Yaku])
+		fmt.Println(g.Judge())
+		fmt.Println()
+		*/
+		if isPwin {
+			pc += r
+			//fmt.Println("parent:", r)
 		} else {
-			fmt.Println("winner: child")
-			childMoney += dMoeny * payout
-			parentMoney -= dMoeny * payout
+			cc += r
+			//fmt.Println("children:", r)
 		}
-		fmt.Println("")
 	}
-	pR := float64(parentMoney) / float64(dMoeny * dLoopN)
-	cR := float64(childMoney)  / float64(dMoeny * dLoopN)
-
-	//pR := float64(parentMoney)
-	//cR := float64(childMoney)
-
-	return pR , cR
+	fmt.Println("parent:", pc)
+	fmt.Println("player:", cc)
+	fmt.Println("P:", float64(pc)/float64(cc))
 }
 
-
-func payoutMultiplier(winner string, pPayout int, cPayout int) int {
-	if pPayout == 0 {
-		pPayout = 1
-	}
-	if cPayout == 0 {
-		cPayout = 1
-	}
-	if winner == "parent" {
-		if pPayout == HIFUMI {
-			baizuke := 1
-			if cPayout == ARASHI || cPayout == SHIGORO || cPayout == PIN_ZORO {
-				baizuke = cPayout
-			}
-
-			return HIFUMI * baizuke
+func (g Game) Judge() (isParentWin bool, baizuke int) {
+	baizuke = 1
+	if g.isParentWin() {
+	} else {
+		if g.Parent.Yaku == HIFUMI {
+			baizuke *= 2
 		}
-
-		if cPayout ==  HIFUMI {
-			baizuke := 1
-			if pPayout == ARASHI || pPayout == SHIGORO || pPayout == PIN_ZORO {
-				baizuke = pPayout
-			}
-			return -HIFUMI * baizuke
+		if g.Player.Yaku == PIN_ZORO {
+			baizuke *= 3
 		}
-		return pPayout
+		if g.Player.Yaku == ARASHI {
+			baizuke *= 2
+		}
+		if g.Player.Yaku == SHIGORO {
+			baizuke *= 2
+		}
 	}
 
-	if pPayout == HIFUMI {
-		baizuke := 1
-		if cPayout == ARASHI || cPayout == SHIGORO || cPayout == PIN_ZORO {
-			baizuke = cPayout
-		}
-		return -HIFUMI * baizuke
+	return g.isParentWin(), baizuke
+}
+func (g Game) isParentWin() bool {
+	if g.Parent.Yaku == ME && g.Player.Yaku == ME {
+		return g.Parent.Me >= g.Player.Me
 	}
-	return cPayout
+	return g.Parent.Yaku >= g.Player.Yaku
 }
 
 func main() {
-	l := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}))
-
-	slog.SetDefault(l) 
 	rand.NewSource(time.Now().UnixNano())
-	parentMoney, childMoney := playGame()
-	fmt.Printf("Parent Money: %f\n", parentMoney)
-	fmt.Printf("Child Money: %f\n", childMoney)
+	g := Game{}
+	g.Start(10000000)
 }
