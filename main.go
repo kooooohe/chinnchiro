@@ -25,6 +25,10 @@ func (d *Dice) roll() {
 	d.value = rand.Intn(6) + 1
 }
 
+func (d *Dice) roll456() {
+	d.value = rand.Intn(3) + 4
+}
+
 type Dices struct {
 	Dices [3]Dice
 }
@@ -32,6 +36,13 @@ type Dices struct {
 func (d *Dices) roll() {
 	for i := 0; i < 3; i++ {
 		d.Dices[i].roll()
+	}
+	d.sort()
+}
+
+func (d *Dices) roll456() {
+	for i := 0; i < 3; i++ {
+		d.Dices[i].roll456()
 	}
 	d.sort()
 }
@@ -104,7 +115,7 @@ type Parent struct {
 func (p *Parent) Roll() {
 	for range 1000000 {
 		d := Dices{}
-		d.roll()
+		d.roll456()
 		if d.Yaku() != ME_NASHI {
 			p.Yaku = d.Yaku()
 			if p.Yaku == ME {
@@ -128,15 +139,6 @@ type Game struct {
 }
 
 func (g *Game) Start(n int) {
-	m := map[Yaku]string{
-		1: "HIFUMI",
-		2: "ME_NASHI",
-		3: "ME",
-		4: "SHIGORO",
-		5: "ARASHI",
-		6: "PIN_ZORO",
-	}
-	_ = m
 
 	pc := 0
 	cc := 0
@@ -146,20 +148,10 @@ func (g *Game) Start(n int) {
 		g.Player.Roll()
 		g.Parent.Roll()
 		isPwin, r := g.Judge()
-		/*
-			fmt.Println("parent:", g.Parent)
-			fmt.Println(m[g.Parent.Yaku])
-			fmt.Println("children:", g.Player)
-			fmt.Println(m[g.Player.Yaku])
-			fmt.Println(g.Judge())
-			fmt.Println()
-		*/
 		if isPwin {
 			pc += r
-			//fmt.Println("parent:", r)
 		} else {
 			cc += r
-			//fmt.Println("children:", r)
 		}
 	}
 	fmt.Println("parent:", pc)
@@ -168,8 +160,13 @@ func (g *Game) Start(n int) {
 }
 
 func (g Game) Judge() (isParentWin bool, baizuke int) {
-	baizuke = 1
+	if g.isTie() {
+		return true, 0
+	}
+
+	baizuke = 3
 	if g.isParentWin() {
+		baizuke = 1
 	} else {
 		if g.Parent.Yaku == HIFUMI {
 			baizuke *= 2
@@ -187,6 +184,14 @@ func (g Game) Judge() (isParentWin bool, baizuke int) {
 
 	return g.isParentWin(), baizuke
 }
+
+func (g Game) isTie() bool {
+	if g.Parent.Yaku == ME && g.Player.Yaku == ME {
+		return g.Parent.Me == g.Player.Me
+	}
+	return g.Parent.Yaku == g.Player.Yaku
+}
+
 func (g Game) isParentWin() bool {
 	if g.Parent.Yaku == ME && g.Player.Yaku == ME {
 		return g.Parent.Me >= g.Player.Me
